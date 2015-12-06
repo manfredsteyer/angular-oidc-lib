@@ -1,4 +1,4 @@
-# AngularJS with OAuth2 and OpenId Connect Implicit Flow Sample
+# Simple Lib for using OAuth2 and OIDC in Angular
 
 ## Installation
 
@@ -19,6 +19,11 @@ The easiest way to get stared is to include the provided bundle:
 - sha256
 - angular-ui-router (not part of the bundle)
 - angular (not part of the bundle)
+
+## License
+
+MIT, see https://opensource.org/licenses/MIT
+
 
 ## Authorization-Server
 The provided sample uses a hosted version of IdentityServer3 (https://github.com/IdentityServer/IdentityServer3), but it is aimed to work also with other OAuth2/OIDC-Authorization-Servers. You can **login with any Facebook-Account or with max/geheim**.
