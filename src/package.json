@@ -1,0 +1,12 @@
+{
+  "name": "angular-oidc",
+  "version": "1.0.9",
+  "description": "OAuth 2 and OIDC-Lib for AngularJS",
+  "keywords": [],
+  "author": "Manfred Steyer (http://www.softwarearchitekt.at)",
+  "license": "MIT",
+  "dependencies": {
+    "angular-base64": "^2.0.5",
+    "sha256": "^0.2.0"
+  }
+}
