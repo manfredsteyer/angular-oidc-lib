@@ -28,10 +28,6 @@ MIT, see https://opensource.org/licenses/MIT
 ## Authorization-Server
 The provided sample uses a hosted version of IdentityServer3 (https://github.com/IdentityServer/IdentityServer3), but it is aimed to work also with other OAuth2/OIDC-Authorization-Servers. You can **login with any Facebook-Account or with max/geheim**.
 
-## Components
-
-You'll find the reusable ``oauthService`` within the folder ``components/oauth``.
-
 ## Configuration
 
 Just configure ``oauthService`` and call setup to let it hook into UI-Router. Users that require to log in are redirected to the mentioned ``loginState`` and after logging in and receiving a token, ``onTokenReceived`` is called. There you can grab the requested token.
