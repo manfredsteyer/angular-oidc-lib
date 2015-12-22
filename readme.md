@@ -170,8 +170,10 @@ $scope.refresh = function () {
 
 To hide the used iframe, you can define a style for it's class ``oauthFrame``:
 
+```
 <style>
     .oauthFrame {
         display: none;
     }
 </style>    
+```
