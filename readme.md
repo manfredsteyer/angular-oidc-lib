@@ -144,3 +144,34 @@ There is also an ``oauthLoginButton``-Directive you could use to create a login-
   state="model.requestedUrl" 
   class="btn" />
 ```  
+
+## Refresh Token
+
+According to the OAuth2-Spec and for security reasons, implicit flow doesn't issue a refresh-token. But if the Authorization Server remembers the current user and his or her constent, for instance by using cookies, it is quite easy to get a new token without user-interaction. Just redirect the user to the authorization server:
+```
+oauthService.initImplicitFlow(optionalState);
+```
+
+To prevent leaving the current single page application, this library can try to get an new token using an hidden iframe. Call ``tryRefresh`` for this purpose. If that works out, the callback ``onTokenReceived`` (see above) is called. In addition to that, this method returns a promise that tells you, whether the refresh succeeded or failed. Please note, that the mentioned callback is called twice: once for the application-instance in the iframe and once for the calling application outside of it. Afterwards the iframe is removed.  
+
+```
+$scope.refresh = function () {
+    oauthService
+        .tryRefresh()
+        .then(function () {
+            var token = oauthService.getAccessToken();
+            $scope.model.message = "Got Token: " + token;
+            $http.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+        })
+        .catch(function () {
+            $scope.model.message = "Error receiving new token!";
+        });
+```
+
+To hide the used iframe, you can define a style for it's class ``oauthFrame``:
+
+<style>
+    .oauthFrame {
+        display: none;
+    }
+</style>    

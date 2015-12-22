@@ -6,19 +6,19 @@ app.config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
 
     $stateProvider.state('home', {
         url: '/home',
-        templateUrl: '/app/demo/home.html',
+        templateUrl: 'app/demo/home.html',
     }).state('voucher', {
         url: '/voucher',
-        templateUrl: '/app/demo/voucher.html',
+        templateUrl: 'app/demo/voucher.html',
         controller: 'VoucherCtrl',
         restricted: true
     }).state('login', {
         url: '/login?requestedUrl',
-        templateUrl: '/app/demo/login.html',
+        templateUrl: 'app/demo/login.html',
         controller: 'LoginCtrl'
     }).state('logout', {
         url: '/logout',
-        templateUrl: '/app/demo/logout.html',
+        templateUrl: 'app/demo/logout.html',
         controller: 'LogoutCtrl'
     });
 
@@ -87,13 +87,16 @@ app.controller("VoucherCtrl", function ($scope, $http, oauthService, config) {
         oauthService
             .tryRefresh()
             .then(function () {
-                $scope.model.message = "Got Token!";
-                $http.defaults.headers.common['Authorization'] = 'Bearer ' + oauthService.getAccessToken();
+                var token = oauthService.getAccessToken();
+                $scope.model.message = "Got Token: " + token;
+                $http.defaults.headers.common['Authorization'] = 'Bearer ' + token;
             })
             .catch(function () {
                 $scope.model.message = "Error receiving new token!";
             });
     }
+    
+    $scope.oauthService = oauthService;
 
 });
 

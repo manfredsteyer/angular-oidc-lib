@@ -1,6 +1,6 @@
 {
   "name": "angular-oidc",
-  "version": "1.0.14",
+  "version": "1.1.0",
   "description": "OAuth 2 and OIDC-Lib for AngularJS",
   "keywords": [],
   "author": "Manfred Steyer (http://www.softwarearchitekt.at)",
@@ -11,7 +11,7 @@
     "sha256": "^0.2.0"
   },
   "scripts": {
-      "bundle": "browserify oauth.js -o bundle/oauth.js",
-      "to-sample": "xcopy bundle\\oauth.js ..\\sample\\node_modules\\angular-oidc\\bundle /y"
+    "bundle": "browserify oauth.js -o bundle/oauth.js",
+    "to-sample": "xcopy bundle\\oauth.js ..\\sample\\node_modules\\angular-oidc\\bundle /y"
   }
 }
