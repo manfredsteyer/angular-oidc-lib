@@ -170,6 +170,84 @@
 !function(globals) {
 'use strict'
 
+var convertHex = {
+  bytesToHex: function(bytes) {
+    /*if (typeof bytes.byteLength != 'undefined') {
+      var newBytes = []
+
+      if (typeof bytes.buffer != 'undefined')
+        bytes = new DataView(bytes.buffer)
+      else
+        bytes = new DataView(bytes)
+
+      for (var i = 0; i < bytes.byteLength; ++i) {
+        newBytes.push(bytes.getUint8(i))
+      }
+      bytes = newBytes
+    }*/
+    return arrBytesToHex(bytes)
+  },
+  hexToBytes: function(hex) {
+    if (hex.length % 2 === 1) throw new Error("hexToBytes can't have a string with an odd number of characters.")
+    if (hex.indexOf('0x') === 0) hex = hex.slice(2)
+    return hex.match(/../g).map(function(x) { return parseInt(x,16) })
+  }
+}
+
+
+// PRIVATE
+
+function arrBytesToHex(bytes) {
+  return bytes.map(function(x) { return padLeft(x.toString(16),2) }).join('')
+}
+
+function padLeft(orig, len) {
+  if (orig.length > len) return orig
+  return Array(len - orig.length + 1).join('0') + orig
+}
+
+
+if (typeof module !== 'undefined' && module.exports) { //CommonJS
+  module.exports = convertHex
+} else {
+  globals.convertHex = convertHex
+}
+
+}(this);
+},{}],3:[function(require,module,exports){
+!function(globals) {
+'use strict'
+
+var convertString = {
+  bytesToString: function(bytes) {
+    return bytes.map(function(x){ return String.fromCharCode(x) }).join('')
+  },
+  stringToBytes: function(str) {
+    return str.split('').map(function(x) { return x.charCodeAt(0) })
+  }
+}
+
+//http://hossa.in/2012/07/20/utf-8-in-javascript.html
+convertString.UTF8 = {
+   bytesToString: function(bytes) {
+    return decodeURIComponent(escape(convertString.bytesToString(bytes)))
+  },
+  stringToBytes: function(str) {
+   return convertString.stringToBytes(unescape(encodeURIComponent(str)))
+  }
+}
+
+if (typeof module !== 'undefined' && module.exports) { //CommonJS
+  module.exports = convertString
+} else {
+  globals.convertString = convertString
+}
+
+}(this);
+},{}],4:[function(require,module,exports){
+!function(globals) {
+'use strict'
+
 var _imports = {}
 
 if (typeof module !== 'undefined' && module.exports) { //CommonJS
@@ -321,85 +399,7 @@ sha256.x2 = function(message, options) {
 
 }(this);
 
-},{"convert-hex":3,"convert-string":4}],3:[function(require,module,exports){
-!function(globals) {
-'use strict'
-
-var convertHex = {
-  bytesToHex: function(bytes) {
-    /*if (typeof bytes.byteLength != 'undefined') {
-      var newBytes = []
-
-      if (typeof bytes.buffer != 'undefined')
-        bytes = new DataView(bytes.buffer)
-      else
-        bytes = new DataView(bytes)
-
-      for (var i = 0; i < bytes.byteLength; ++i) {
-        newBytes.push(bytes.getUint8(i))
-      }
-      bytes = newBytes
-    }*/
-    return arrBytesToHex(bytes)
-  },
-  hexToBytes: function(hex) {
-    if (hex.length % 2 === 1) throw new Error("hexToBytes can't have a string with an odd number of characters.")
-    if (hex.indexOf('0x') === 0) hex = hex.slice(2)
-    return hex.match(/../g).map(function(x) { return parseInt(x,16) })
-  }
-}
-
-
-// PRIVATE
-
-function arrBytesToHex(bytes) {
-  return bytes.map(function(x) { return padLeft(x.toString(16),2) }).join('')
-}
-
-function padLeft(orig, len) {
-  if (orig.length > len) return orig
-  return Array(len - orig.length + 1).join('0') + orig
-}
-
-
-if (typeof module !== 'undefined' && module.exports) { //CommonJS
-  module.exports = convertHex
-} else {
-  globals.convertHex = convertHex
-}
-
-}(this);
-},{}],4:[function(require,module,exports){
-!function(globals) {
-'use strict'
-
-var convertString = {
-  bytesToString: function(bytes) {
-    return bytes.map(function(x){ return String.fromCharCode(x) }).join('')
-  },
-  stringToBytes: function(str) {
-    return str.split('').map(function(x) { return x.charCodeAt(0) })
-  }
-}
-
-//http://hossa.in/2012/07/20/utf-8-in-javascript.html
-convertString.UTF8 = {
-   bytesToString: function(bytes) {
-    return decodeURIComponent(escape(convertString.bytesToString(bytes)))
-  },
-  stringToBytes: function(str) {
-   return convertString.stringToBytes(unescape(encodeURIComponent(str)))
-  }
-}
-
-if (typeof module !== 'undefined' && module.exports) { //CommonJS
-  module.exports = convertString
-} else {
-  globals.convertString = convertString
-}
-
-}(this);
-},{}],5:[function(require,module,exports){
+},{"convert-hex":2,"convert-string":3}],5:[function(require,module,exports){
 (function () {
 
     var oauth2 = angular.module("oauth2");
@@ -525,6 +525,19 @@ var oauth2 = oauth2 || {};
                 $log.error(error);
             });
         };
+        
+        
+        this.callEventIfExists = function() {
+                
+            if (this.options.onTokenReceived) {
+                var tokenParams = { 
+                    idClaims: that.getIdentityClaims(),
+                    idToken: that.getIdToken(),
+                    accessToken: that.getAccessToken()
+                };
+                this.options.onTokenReceived(tokenParams);
+            }
+        }
 
         this.tryLogin = function (options) {
             
@@ -677,6 +690,10 @@ var oauth2 = oauth2 || {};
             return JSON.parse(claims);
         }
         
+        this.getIdToken = function() {
+            return localStorage.getItem("id_token");
+        }
+        
         var padBase64 = function (base64data) {
             while (base64data.length % 4 !== 0) {
                 base64data += "=";
@@ -695,27 +712,46 @@ var oauth2 = oauth2 || {};
 
             win.onOAuthCallback = function () {
                 $timeout(function () {
-                    $document.find("#oauthFrame").remove();
+                    //$document.find("#oauthFrame").remove();
+                    removeIFrame();
                 }, 0);
-
+                that.callEventIfExists();
                 deferred.resolve();
             };
-
-            $document.find("#oauthFrame").remove();
+            removeIFrame();
+            //$document.find("#oauthFrame").remove();
 
             var elem = $(html);
             $document.find("body").children().first().append(elem);
 
             return deferred.promise;
         };
+        
+        var removeIFrame = function() {
+            var iframes = $document.find("iframe");
+            var found = false;
+            for(var i=0; i<iframes.length; i++) {
+                if (iframes[i].id == "oauthFrame") {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) return;
+            
+            angular.element(iframes[i]).remove();       
+            
+        }
 
-        this.tryRefresh = function () {
+        this.tryRefresh = function (timeoutInMsec) {
             var that = this;
             var deferred = $q.defer();
+            
+            timeoutInMsec = timeoutInMsec || 10000;
 
             return this.createLoginUrl().then(function (url) {
 
-                var html = "<iframe src='" + url + "' height='400' width='400' id='oauthFrame' class='oauthFrameHidden'></iframe>";
+                var html = "<iframe src='" + url + "' height='400' width='400' id='oauthFrame' class='oauthFrame'></iframe>";
 
                 var win = window;
                 var callbackExecuted = false;
@@ -725,12 +761,12 @@ var oauth2 = oauth2 || {};
                 var timeoutPromise = $timeout(function () {
                     if (!callbackExecuted) {
                         timeoutReached = true;
-                        var x = $document.find("iframe");
 
-                        $document.find("#oauthFrame").remove();
+                        removeIFrame();
+                        //$document.find("#oauthFrame").remove();
                         deferred.reject();
                     }
-                }, 10000);
+                }, timeoutInMsec);
 
                 win.onOAuthCallback = function () {
                     if (timeoutReached)
@@ -741,16 +777,18 @@ var oauth2 = oauth2 || {};
 
                     // Der Aufrufer (= iframe) kann nicht im Zuge des Aufrufes entfernt werden
                     // Deswegen wird das Entfernen mit einer Verzögerung von 0 Sekunden gesheduled
-                    // Das hat zur Folge, dass kurz *NACH* (weil nur ein Thread!) der Abarbeitung
-                    // dieses Codes der Timeout eintritt
                     $timeout(function () {
-                        $document.find("#oauthFrame").remove();
+                        //$document.find("#oauthFrame").remove();
+                        removeIFrame();
                     }, 0);
+                    
+                    that.callEventIfExists();
 
                     deferred.resolve();
                 };
 
-                $document.find("#oauthFrame").remove();
+                removeIFrame();
+                //$document.find("#oauthFrame").remove();
 
                 //var elem = $(html);
                 //var e2 = angular.element(html);
@@ -879,6 +917,7 @@ var oauth2 = oauth2 || {};
             
              options = options || {};
              options.loginState = options.loginState || "login"; 
+             this.options = options;
          
              $rootScope.$on("$stateChangeStart", function (event, toState, toParams, fromState, fromParams) {
         
@@ -912,11 +951,11 @@ var oauth2 = oauth2 || {};
         app.service("oauthService", OAuthService);
     }
 })(oauth2);
-},{"sha256":2}],8:[function(require,module,exports){
+},{"sha256":4}],8:[function(require,module,exports){
 require("angular-base64");
 require("sha256");
 require("./oauth-module");
 require("./oauth-service");
 require("./oauth-directives");
 
-},{"./oauth-directives":5,"./oauth-module":6,"./oauth-service":7,"angular-base64":1,"sha256":2}]},{},[8]);
+},{"./oauth-directives":5,"./oauth-module":6,"./oauth-service":7,"angular-base64":1,"sha256":4}]},{},[8]);

@@ -62,6 +62,19 @@ var oauth2 = oauth2 || {};
                 $log.error(error);
             });
         };
+        
+        
+        this.callEventIfExists = function() {
+                
+            if (this.options.onTokenReceived) {
+                var tokenParams = { 
+                    idClaims: that.getIdentityClaims(),
+                    idToken: that.getIdToken(),
+                    accessToken: that.getAccessToken()
+                };
+                this.options.onTokenReceived(tokenParams);
+            }
+        }
 
         this.tryLogin = function (options) {
             
@@ -214,6 +227,10 @@ var oauth2 = oauth2 || {};
             return JSON.parse(claims);
         }
         
+        this.getIdToken = function() {
+            return localStorage.getItem("id_token");
+        }
+        
         var padBase64 = function (base64data) {
             while (base64data.length % 4 !== 0) {
                 base64data += "=";
@@ -232,27 +249,46 @@ var oauth2 = oauth2 || {};
 
             win.onOAuthCallback = function () {
                 $timeout(function () {
-                    $document.find("#oauthFrame").remove();
+                    //$document.find("#oauthFrame").remove();
+                    removeIFrame();
                 }, 0);
-
+                that.callEventIfExists();
                 deferred.resolve();
             };
-
-            $document.find("#oauthFrame").remove();
+            removeIFrame();
+            //$document.find("#oauthFrame").remove();
 
             var elem = $(html);
             $document.find("body").children().first().append(elem);
 
             return deferred.promise;
         };
+        
+        var removeIFrame = function() {
+            var iframes = $document.find("iframe");
+            var found = false;
+            for(var i=0; i<iframes.length; i++) {
+                if (iframes[i].id == "oauthFrame") {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) return;
+            
+            angular.element(iframes[i]).remove();       
+            
+        }
 
-        this.tryRefresh = function () {
+        this.tryRefresh = function (timeoutInMsec) {
             var that = this;
             var deferred = $q.defer();
+            
+            timeoutInMsec = timeoutInMsec || 10000;
 
             return this.createLoginUrl().then(function (url) {
 
-                var html = "<iframe src='" + url + "' height='400' width='400' id='oauthFrame' class='oauthFrameHidden'></iframe>";
+                var html = "<iframe src='" + url + "' height='400' width='400' id='oauthFrame' class='oauthFrame'></iframe>";
 
                 var win = window;
                 var callbackExecuted = false;
@@ -262,12 +298,12 @@ var oauth2 = oauth2 || {};
                 var timeoutPromise = $timeout(function () {
                     if (!callbackExecuted) {
                         timeoutReached = true;
-                        var x = $document.find("iframe");
 
-                        $document.find("#oauthFrame").remove();
+                        removeIFrame();
+                        //$document.find("#oauthFrame").remove();
                         deferred.reject();
                     }
-                }, 10000);
+                }, timeoutInMsec);
 
                 win.onOAuthCallback = function () {
                     if (timeoutReached)
@@ -278,16 +314,18 @@ var oauth2 = oauth2 || {};
 
                     // Der Aufrufer (= iframe) kann nicht im Zuge des Aufrufes entfernt werden
                     // Deswegen wird das Entfernen mit einer Verzögerung von 0 Sekunden gesheduled
-                    // Das hat zur Folge, dass kurz *NACH* (weil nur ein Thread!) der Abarbeitung
-                    // dieses Codes der Timeout eintritt
                     $timeout(function () {
-                        $document.find("#oauthFrame").remove();
+                        //$document.find("#oauthFrame").remove();
+                        removeIFrame();
                     }, 0);
+                    
+                    that.callEventIfExists();
 
                     deferred.resolve();
                 };
 
-                $document.find("#oauthFrame").remove();
+                removeIFrame();
+                //$document.find("#oauthFrame").remove();
 
                 //var elem = $(html);
                 //var e2 = angular.element(html);
@@ -416,6 +454,7 @@ var oauth2 = oauth2 || {};
             
              options = options || {};
              options.loginState = options.loginState || "login"; 
+             this.options = options;
          
              $rootScope.$on("$stateChangeStart", function (event, toState, toParams, fromState, fromParams) {
         

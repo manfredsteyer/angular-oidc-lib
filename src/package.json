@@ -9,5 +9,9 @@
   "dependencies": {
     "angular-base64": "^2.0.5",
     "sha256": "^0.2.0"
+  },
+  "scripts": {
+      "bundle": "browserify oauth.js -o bundle/oauth.js",
+      "to-sample": "xcopy bundle\\oauth.js ..\\sample\\node_modules\\angular-oidc\\bundle /y"
   }
 }
