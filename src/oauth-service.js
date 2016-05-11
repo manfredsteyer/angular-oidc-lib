@@ -444,7 +444,7 @@ var oauth2 = oauth2 || {};
             var leftMostHalf = tokenHash.substr(0, tokenHash.length/2 );
 
             var tokenHashBase64 = $base64.encode(leftMostHalf);
-            var atHash = tokenHashBase64.replace("+", "-").replace("/", "_").replace(/=/g, ""); 
+            var atHash = tokenHashBase64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, ""); 
 
             return (atHash == idClaims.at_hash);
         }
