@@ -2,7 +2,7 @@
 
     var oauth2 = angular.module("oauth2");
 
-    oauth2.directive("oauthLoginButton", function (oauthService, $log) {
+    oauth2.directive("oauthLoginButton", ['oauthService', '$log', function (oauthService, $log) {
         return {
             scope: {
                 state: "="
@@ -18,9 +18,9 @@
                 });
             }
         };
-    });
+    }]);
 
-    oauth2.directive("oauthLoginForm", function (oauthService, $location, $timeout) {
+    oauth2.directive("oauthLoginForm", ['oauthService', '$location', '$timeout', function (oauthService, $location, $timeout) {
         return {
             scope: {
                 callback: "&",
@@ -49,6 +49,7 @@
                 });
             }
         };
-    });
+
+    }]);
 
 })();

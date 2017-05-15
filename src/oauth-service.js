@@ -485,6 +485,6 @@ var oauth2 = oauth2 || {};
 
     if (isAngularApp) {
         var app = angular.module("oauth2");
-        app.service("oauthService", OAuthService);
+        app.service("oauthService", ['$document', '$timeout', '$q', '$location', '$http', '$log', '$state', '$rootScope', '$base64', OAuthService]);
     }
 })(oauth2);
